@@ -1,0 +1,46 @@
+workflows:
+  android-kivy:
+    name: Build Kivy App for Android
+    environment:
+      vars:
+        BUILD_DIR: build
+        BUILD_SPEC: buildozer.spec
+      android_signing:
+        - keystore_reference: my-keystore
+
+      groups:
+        - google_play  # Falls du später deployen willst
+
+      matrix:
+        os: linux
+
+      scripts:
+        - name: Install dependencies
+          script: |
+            sudo apt update
+            sudo apt install -y python3-pip zip unzip openjdk-17-jdk
+            pip3 install --upgrade pip
+            pip3 install buildozer cython
+            sudo apt install -y build-essential git python3 python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0 libgstreamer1.0-dev libmtdev-dev
+            sudo apt install -y libgl1-mesa-dev libgles2-mesa-dev xclip xsel libjpeg-dev
+
+        - name: Initialize Buildozer
+          script: |
+            buildozer android clean
+            buildozer android debug
+
+        - name: Move APK to output directory
+          script: |
+            mkdir -p $CM_BUILD_DIR/apk
+            cp bin/*.apk $CM_BUILD_DIR/apk/
+
+    artifacts:
+      - build/apk/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - deine.email@beispiel.de
+        notify:
+          success: true
+          failure: true
